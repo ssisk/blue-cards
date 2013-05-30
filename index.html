@@ -10,7 +10,7 @@
 
   <script type="text/x-handlebars" id="why">
     <h1>About</h1>
-    <p class="readable-text">We love playing dominion and seeing how the different cards interact. We'd like to see what cards see to interact well or poorly, and we think that we can use that information to generate some interesting dominion sets.</p>
+    <p class="readable-text">We love playing dominion and seeing how the different cards interact. We wouldd like to see how cards interact, and we think that we can use that information to generate some interesting dominion sets.</p>
   </script>
 
   <script type="text/x-handlebars">
@@ -34,30 +34,31 @@
     <div>
       <h2>What sets would you like to add?</h2>
       <ul>
-	<li><label><input type="checkbox">Base</label></li>
-	<li><label><input type="checkbox">Intrigue</label></li>
-	<li><label><input type="checkbox">Seaside</label></li>
-	<li><label><input type="checkbox">Dark Ages</label></li>
-	<li><label><input type="checkbox">Cornucopia</label></li>
+      	<li><label><input type="checkbox">Base</label></li>
+	      <li><label><input type="checkbox">Intrigue</label></li>
+	      <li><label><input type="checkbox">Seaside</label></li>
+	      <li><label><input type="checkbox">Dark Ages</label></li>
+	      <li><label><input type="checkbox">Cornucopia</label></li>
       </ul>
-      <button>Go!</button>
+      <button {{action generate}}>Go!</button>
     </div>
-
+    {{#if weHaveCards}}
     <div>
       <h2>Your Cards</h2>
       <table>
-	<thead>
-	  <tr>
-	    <td>Set</td><td>Card</td>
-	  </tr>
-	</thead>
-	<tr>
-	  <td>B</td><td>Library</td>
-	</tr>
-	<tr>
-	  <td>I</td><td>Masquerade</td>
-	</tr>
+      	<thead>
+      	  <tr>
+      	    <td>Set</td><td>Card</td>
+      	  </tr>
+      	</thead>
+        {{#each cardsToDisplay}}
+          <tr>
+            <td>I</td><td>{{name}}</td>
+          </tr>
+        {{/each}}
+      </table>
     </div>
+    {{/if}}
 
   </script>
   <body>

@@ -1,0 +1,8 @@
+wire up the picker
+	get the checkboxes hooked up to an options object
+	get the display cards hooked up to a results object - ha! sort of got it. 
+		
+
+figure out how we will generate cards
+
+add support for showing the location in the box
