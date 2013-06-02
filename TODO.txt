@@ -1,3 +1,20 @@
+server side
+===========
+get a working method for "get 10 random cards" that 
+	receives a set of options
+	returns 10 cards
+
+get a working method for "here's results of a game"
+	receives the results of a game
+		cards played with
+		"satisfaction"
+
+write some test data into the app engine's data store
+
+
+
+client side
+==============
 wire up the picker
 	get the checkboxes hooked up to an options object
 	get the display cards hooked up to a results object - ha! sort of got it. 
