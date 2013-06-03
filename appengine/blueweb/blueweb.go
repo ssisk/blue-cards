@@ -1,15 +1,18 @@
 package blueweb 
 
 import (
-    "encoding/json"
-    "fmt"
-    "io/ioutil"
-    "net/http"
+  "appengine"
+  "appengine/datastore"
+  "encoding/json"
+  "fmt"
+  "io/ioutil"
+  "net/http"
 )
 
 func init() {
-    http.HandleFunc("/", root)
-    http.HandleFunc("/get10", get10)
+  http.HandleFunc("/", root)
+  http.HandleFunc("/get10", get10)
+  http.HandleFunc("/judge", judge)
 } 
 
 type Get10Options struct {
@@ -22,11 +25,7 @@ type Get10Options struct {
 func readStructFromJSONRequest(w http.ResponseWriter, r *http.Request, readInto interface{}) error {
     // TODO: we should probably check that this is a POST and that it's a request of type text/json
   jsonRaw,_ := ioutil.ReadAll(r.Body)
-  err := json.Unmarshal(jsonRaw, readInto)
-  if err != nil {
-    serveError(w, err)
-  }
-  return err
+  return json.Unmarshal(jsonRaw, readInto)
 }
 
 // this is where all the magic happens for generating the 10 cards
@@ -40,9 +39,11 @@ func generateGet10Response(cards []int, w http.ResponseWriter) {
 }
 
 func get10(w http.ResponseWriter, r *http.Request) {
+  var err error
+
   options := Get10Options{}
-  optionsErr := readStructFromJSONRequest(w, r, &options)
-  if optionsErr != nil {
+  if err = readStructFromJSONRequest(w, r, &options); err != nil {
+    serveError(w, err)
     return
   }
 
@@ -58,8 +59,64 @@ func root(w http.ResponseWriter, r *http.Request) {
 func serveError(w http.ResponseWriter, err error) {
     w.WriteHeader(500)
     fmt.Fprintf(w, 
-                "whoopsies! Could not understand that json struct:\n'%v'",
+                "whoopsies! There was an error:\n'%v'",
                 err)
 }
 
+type SetRating struct {
+/* 
+  Obviously, these are going to change. This is just a first pass.
 
+  If we can, we might just make this a map that gets some light validation and
+  written straight into the db. That way, we can add new survey questions on the
+  client, and the analysis  code can read it without us having to deploy the
+  web layer.
+
+  */
+
+  /* We should talk about how to store the card list is person.*/
+  Cards string /* of format 1,2,3,4 and sorted lowest -> highest */
+  Rating int8 /* 1 -> 5, 5 is best */
+  NumPlayers int8
+  PlayTime int16 /* how many minutes did the game take? */
+}
+
+func writeSetRatingToDB(r *http.Request, rating *SetRating) error {
+  c := appengine.NewContext(r)
+
+  key := datastore.NewIncompleteKey(c, "SetRatings", nil) 
+
+  _, err := datastore.Put(c, key, rating)
+
+  return err
+}
+
+func validateAndFixupSetRating(rating *SetRating) error {
+  /* for now, does nothing*/
+  /* In the future, probably validates that the Cards list is valid. If we
+     switch to a map written straight to the db, this will probably enforce
+     a size limit on the values written */
+  return nil
+}
+
+func judge(w http.ResponseWriter, r *http.Request) {
+  var err error
+
+  rating := SetRating{}
+  if err = readStructFromJSONRequest(w, r, &rating); err != nil {
+    serveError(w, err)
+    return
+  }
+
+  if err = validateAndFixupSetRating(&rating); err != nil {
+    serveError(w, err) 
+    return 
+  }
+
+  if err = writeSetRatingToDB(r, &rating); err != nil {
+    serveError(w, err)
+    return
+  }
+
+  fmt.Fprintln(w, "ok")
+}

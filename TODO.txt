@@ -1,16 +1,6 @@
 server side
 ===========
-get a working method for "get 10 random cards" that 
-	receives a set of options
-	returns 10 cards
-
-get a working method for "here's results of a game"
-	receives the results of a game
-		cards played with
-		"satisfaction"
-
-write some test data into the app engine's data store
-
+move judge/get10 into their own files 
 
 
 client side
@@ -23,3 +13,21 @@ wire up the picker
 figure out how we will generate cards
 
 add support for showing the location in the box
+
+
+
+
+=========
+Done
+=========
+get a working method for "get 10 random cards" that 
+	receives a set of options
+	returns 10 cards
+
+
+write some test data into the app engine's data store
+
+get a working method for "here's results of a game"
+	receives the results of a game
+		cards played with
+		"satisfaction"
