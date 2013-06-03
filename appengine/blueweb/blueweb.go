@@ -7,8 +7,6 @@ import (
     "net/http"
 )
 
-
-
 func init() {
     http.HandleFunc("/", root)
     http.HandleFunc("/get10", get10)
@@ -21,20 +19,14 @@ type Get10Options struct {
   ForbiddenCards []int
 }
 
-func get10ReadOptions (w http.ResponseWriter, r *http.Request) (Get10Options, error) {
-  // TODO: we should probably check that this is a POST and that it's a request of type text/json
-  options := Get10Options{}
-  optionsRaw,_ := ioutil.ReadAll(r.Body)
-  err := json.Unmarshal(optionsRaw, &options)
-  // just a little debug code - feel free to remove eventually
-  //optionsString := `{"NoAttack": true,"NoAttackWithoutDefense": false}`
-  //err := json.Unmarshal([]byte(optionsString), &options)
+func readStructFromJSONRequest(w http.ResponseWriter, r *http.Request, readInto interface{}) error {
+    // TODO: we should probably check that this is a POST and that it's a request of type text/json
+  jsonRaw,_ := ioutil.ReadAll(r.Body)
+  err := json.Unmarshal(jsonRaw, readInto)
   if err != nil {
-    w.WriteHeader(500)
-    fmt.Fprint(w, "Those options were not understood\n")
-    fmt.Fprintf(w, "optionsRaw:'%v'\n", string(optionsRaw))
+    serveError(w, err)
   }
-  return options, err
+  return err
 }
 
 // this is where all the magic happens for generating the 10 cards
@@ -48,7 +40,8 @@ func generateGet10Response(cards []int, w http.ResponseWriter) {
 }
 
 func get10(w http.ResponseWriter, r *http.Request) {
-  options, optionsErr := get10ReadOptions(w, r)
+  options := Get10Options{}
+  optionsErr := readStructFromJSONRequest(w, r, &options)
   if optionsErr != nil {
     return
   }
@@ -58,7 +51,15 @@ func get10(w http.ResponseWriter, r *http.Request) {
   generateGet10Response(cards, w)
 }
 
-
 func root(w http.ResponseWriter, r *http.Request) {
   fmt.Fprint(w, "Welcome to Just the Blue Cards")
 }
+
+func serveError(w http.ResponseWriter, err error) {
+    w.WriteHeader(500)
+    fmt.Fprintf(w, 
+                "whoopsies! Could not understand that json struct:\n'%v'",
+                err)
+}
+
+
