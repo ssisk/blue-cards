@@ -9,10 +9,14 @@ import (
   "net/http"
 )
 
+const RatingsKindName = "SetRatings"
+
 func init() {
   http.HandleFunc("/", root)
   http.HandleFunc("/get10", get10)
   http.HandleFunc("/judge", judge)
+  http.HandleFunc("/analysis", analysis)
+  http.HandleFunc("/matchingCard", matchingCard)
 } 
 
 type Get10Options struct {
@@ -75,16 +79,16 @@ type SetRating struct {
   */
 
   /* We should talk about how to store the card list is person.*/
-  Cards string /* of format 1,2,3,4 and sorted lowest -> highest */
+  Cards []int /* of format 1,2,3,4 and sorted lowest -> highest */
   Rating int8 /* 1 -> 5, 5 is best */
   NumPlayers int8
   PlayTime int16 /* how many minutes did the game take? */
 }
-
+           
 func writeSetRatingToDB(r *http.Request, rating *SetRating) error {
   c := appengine.NewContext(r)
 
-  key := datastore.NewIncompleteKey(c, "SetRatings", nil) 
+  key := datastore.NewIncompleteKey(c, RatingsKindName, nil) 
 
   _, err := datastore.Put(c, key, rating)
 
@@ -120,3 +124,54 @@ func judge(w http.ResponseWriter, r *http.Request) {
 
   fmt.Fprintln(w, "ok")
 }
+
+/*
+  this is just to show what analysis could look like
+*/
+func analysis(w http.ResponseWriter, r *http.Request) {
+  c := appengine.NewContext(r)
+
+  query := datastore.NewQuery(RatingsKindName).
+        Filter("Rating >", 3)
+
+
+  fmt.Fprintln(w, "These seemed to do okay:")
+  for itr := query.Run(c); ; {
+    rating := SetRating{}
+    key, err := itr.Next(&rating)
+    if err == datastore.Done {
+      break
+    }
+    
+    if err != nil {
+      serveError(w, err)
+      return
+    }
+
+    fmt.Fprintf(w, "Key=%v\nRating=%#v\n\n", key, rating)
+  }
+} 
+
+func matchingCard(w http.ResponseWriter, r *http.Request) {
+  c := appengine.NewContext(r)
+
+  query := datastore.NewQuery(RatingsKindName).
+        Filter("Cards =", 20)
+
+
+  fmt.Fprintln(w, "These had card 20:")
+  for itr := query.Run(c); ; {
+    rating := SetRating{}
+    key, err := itr.Next(&rating)
+    if err == datastore.Done {
+      break
+    }
+    
+    if err != nil {
+      serveError(w, err)
+      return
+    }
+
+    fmt.Fprintf(w, "Key=%v\nRating=%#v\n\n", key, rating)
+  }
+} 
