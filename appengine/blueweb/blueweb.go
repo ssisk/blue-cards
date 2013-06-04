@@ -1,4 +1,4 @@
-package blueweb 
+package blueweb
 
 import (
   "appengine"
@@ -17,18 +17,18 @@ func init() {
   http.HandleFunc("/judge", judge)
   http.HandleFunc("/analysis", analysis)
   http.HandleFunc("/matchingCard", matchingCard)
-} 
+}
 
 type Get10Options struct {
-  NoAttack bool
+  NoAttack               bool
   NoAttackWithoutDefense bool
-  SetsAvailable []int 
-  ForbiddenCards []int
+  SetsAvailable          []int
+  ForbiddenCards         []int
 }
 
 func readStructFromJSONRequest(w http.ResponseWriter, r *http.Request, readInto interface{}) error {
-    // TODO: we should probably check that this is a POST and that it's a request of type text/json
-  jsonRaw,_ := ioutil.ReadAll(r.Body)
+  // TODO: we should probably check that this is a POST and that it's a request of type text/json
+  jsonRaw, _ := ioutil.ReadAll(r.Body)
   return json.Unmarshal(jsonRaw, readInto)
 }
 
@@ -38,7 +38,7 @@ func generateCards(options *Get10Options) []int {
 }
 
 func generateGet10Response(cards []int, w http.ResponseWriter) {
-  b,_ := json.Marshal(cards)
+  b, _ := json.Marshal(cards)
   fmt.Fprint(w, string(b))
 }
 
@@ -51,7 +51,7 @@ func get10(w http.ResponseWriter, r *http.Request) {
     return
   }
 
-  cards := generateCards(&options) 
+  cards := generateCards(&options)
 
   generateGet10Response(cards, w)
 }
@@ -61,34 +61,34 @@ func root(w http.ResponseWriter, r *http.Request) {
 }
 
 func serveError(w http.ResponseWriter, err error) {
-    w.WriteHeader(500)
-    fmt.Fprintf(w, 
-                "whoopsies! There was an error:\n'%v'",
-                err)
+  w.WriteHeader(500)
+  fmt.Fprintf(w,
+    "whoopsies! There was an error:\n'%v'",
+    err)
 }
 
 type SetRating struct {
-/* 
-  Obviously, these are going to change. This is just a first pass.
+  /* 
+    Obviously, these are going to change. This is just a first pass.
 
-  If we can, we might just make this a map that gets some light validation and
-  written straight into the db. That way, we can add new survey questions on the
-  client, and the analysis  code can read it without us having to deploy the
-  web layer.
+    If we can, we might just make this a map that gets some light validation and
+    written straight into the db. That way, we can add new survey questions on the
+    client, and the analysis  code can read it without us having to deploy the
+    web layer.
 
   */
 
   /* We should talk about how to store the card list is person.*/
-  Cards []int /* of format 1,2,3,4 and sorted lowest -> highest */
-  Rating int8 /* 1 -> 5, 5 is best */
+  Cards      []int /* of format 1,2,3,4 and sorted lowest -> highest */
+  Rating     int8  /* 1 -> 5, 5 is best */
   NumPlayers int8
-  PlayTime int16 /* how many minutes did the game take? */
+  PlayTime   int16 /* how many minutes did the game take? */
 }
-           
+
 func writeSetRatingToDB(r *http.Request, rating *SetRating) error {
   c := appengine.NewContext(r)
 
-  key := datastore.NewIncompleteKey(c, RatingsKindName, nil) 
+  key := datastore.NewIncompleteKey(c, RatingsKindName, nil)
 
   _, err := datastore.Put(c, key, rating)
 
@@ -113,8 +113,8 @@ func judge(w http.ResponseWriter, r *http.Request) {
   }
 
   if err = validateAndFixupSetRating(&rating); err != nil {
-    serveError(w, err) 
-    return 
+    serveError(w, err)
+    return
   }
 
   if err = writeSetRatingToDB(r, &rating); err != nil {
@@ -132,8 +132,7 @@ func analysis(w http.ResponseWriter, r *http.Request) {
   c := appengine.NewContext(r)
 
   query := datastore.NewQuery(RatingsKindName).
-        Filter("Rating >", 3)
-
+    Filter("Rating >", 3)
 
   fmt.Fprintln(w, "These seemed to do okay:")
   for itr := query.Run(c); ; {
@@ -142,7 +141,7 @@ func analysis(w http.ResponseWriter, r *http.Request) {
     if err == datastore.Done {
       break
     }
-    
+
     if err != nil {
       serveError(w, err)
       return
@@ -150,14 +149,13 @@ func analysis(w http.ResponseWriter, r *http.Request) {
 
     fmt.Fprintf(w, "Key=%v\nRating=%#v\n\n", key, rating)
   }
-} 
+}
 
 func matchingCard(w http.ResponseWriter, r *http.Request) {
   c := appengine.NewContext(r)
 
   query := datastore.NewQuery(RatingsKindName).
-        Filter("Cards =", 20)
-
+    Filter("Cards =", 20)
 
   fmt.Fprintln(w, "These had card 20:")
   for itr := query.Run(c); ; {
@@ -166,7 +164,7 @@ func matchingCard(w http.ResponseWriter, r *http.Request) {
     if err == datastore.Done {
       break
     }
-    
+
     if err != nil {
       serveError(w, err)
       return
@@ -174,4 +172,4 @@ func matchingCard(w http.ResponseWriter, r *http.Request) {
 
     fmt.Fprintf(w, "Key=%v\nRating=%#v\n\n", key, rating)
   }
-} 
+}
