@@ -34,8 +34,17 @@ func readStructFromJSONRequest(w http.ResponseWriter, r *http.Request, readInto 
   return json.Unmarshal(jsonRaw, readInto)
 }
 
+func generateRandomNumbers(maxVal int, c chan int64) {
+  max := big.NewInt(int64(maxVal))
 
-func generateRandom(options *Get10Options, c chan int) {
+  for {
+    bigInt,_ := rand.Int(rand.Reader, max)
+    c <- bigInt.Int64()
+  }
+
+} 
+
+func generateRandomCards(options *Get10Options, c chan int) {
 /*
   The general strategy here is to generate a list with all the cards in it,
   then randomly pick indexes out of - we then mark that item in the list
@@ -58,20 +67,18 @@ func generateRandom(options *Get10Options, c chan int) {
   // todo: use the actual set of cards, and pull things out based on the options
   cards := []int{1, 2, 3, 7, 8, 6, 5, 20, 18, 19, 14, 12, 13}
 
-//  curLen := new(big.Int)
-//  curLen.SetInt(&)
-  curLen := big.NewInt(int64(len(cards)))
+  randomNumbers := make(chan int64)
+  go generateRandomNumbers(len(cards), randomNumbers)
   for numGenerated := 0; numGenerated < len(cards); numGenerated += 1 {
-    curBigCard,_ := rand.Int(rand.Reader, curLen)
-    curCard := curBigCard.Int64()
+    curCard := <- randomNumbers
     for cards[curCard] == 0 {  
-      curBigCard, _ = rand.Int(rand.Reader, curLen)
-      curCard = curBigCard.Int64()
+      curCard = <- randomNumbers
     }
     c <- cards[curCard]
     cards[curCard] = 0
     // todo: make it so we don't die in the pathological case
-    // one idea is that when numGenerated 
+    // one idea is that when numGenerated > len(cards)/2, 
+    // clear all the used values out of cards
   }
 
   close (c)
@@ -81,7 +88,7 @@ func generateRandom(options *Get10Options, c chan int) {
 func generateCards(options *Get10Options) []int {
 
   c := make(chan int)
-  go generateRandom(options, c)
+  go generateRandomCards(options, c)
   
   cards := make([]int, 10)
 
