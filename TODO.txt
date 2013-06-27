@@ -1,7 +1,10 @@
 server side
 ===========
-move judge/get10 into their own files 
+move judge into its own file
 
+input the dominion cards
+
+write unit tests for card set generation
 
 client side
 ==============
@@ -9,8 +12,6 @@ wire up the picker
 	get the checkboxes hooked up to an options object
 	get the display cards hooked up to a results object - ha! sort of got it. 
 		
-
-figure out how we will generate cards
 
 add support for showing the location in the box
 
@@ -31,3 +32,9 @@ get a working method for "here's results of a game"
 	receives the results of a game
 		cards played with
 		"satisfaction"
+
+
+move get10 into its own file
+
+be able to generate random sets of cards
+
