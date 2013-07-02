@@ -16,7 +16,7 @@ func generateRandomNumbers(maxVal int, c chan int64) {
 
 } 
   
-func generateRandomCards(options *blueshared.Get10Options, c chan int) {
+func generateRandomCards(options *blueshared.Get10Options, c chan blueshared.Card) {
 /*
   The general strategy here is to generate a list with all the cards in it,
   then randomly pick indexes out of - we then mark that item in the list
@@ -35,19 +35,23 @@ func generateRandomCards(options *blueshared.Get10Options, c chan int) {
   this is good enough for now.
 */
 
-
   // todo: use the actual set of cards, and pull things out based on the options
-  cards := []int{1, 2, 3, 7, 8, 6, 5, 20, 18, 19, 14, 12, 13}
+  cards := make([]blueshared.Card, len(blueshared.AllCards))
+  copy(cards, blueshared.AllCards)
+
+  // TODO: do filtering here!
 
   randomNumbers := make(chan int64)
-  go generateRandomNumbers(len(cards), randomNumbers)
+  go generateRandomNumbers(len(cards), randomNumbers) 
   for numGenerated := 0; numGenerated < len(cards); numGenerated += 1 {
     curCard := <- randomNumbers
-    for cards[curCard] == 0 {  
+
+    // TODO: is this the right way to mark cards as used? 
+    for cards[curCard].Id == -1 {  
       curCard = <- randomNumbers
     }
     c <- cards[curCard]
-    cards[curCard] = 0
+    cards[curCard].Id = -1
     // todo: make it so we don't die in the pathological case
     // one idea is that when numGenerated > len(cards)/2, 
     // clear all the used values out of cards
@@ -58,12 +62,12 @@ func generateRandomCards(options *blueshared.Get10Options, c chan int) {
 
 
 // this is where all the magic happens for generating the 10 cards
-func CardSet(options *blueshared.Get10Options) []int {
+func CardSet(options *blueshared.Get10Options) []blueshared.Card {
 
-  c := make(chan int)
+  c := make(chan blueshared.Card)
   go generateRandomCards(options, c)
   
-  cards := make([]int, 10)
+  cards := make([]blueshared.Card, 10)
 
   for i := 0; i < 10; i++ {
     cards[i] = <- c

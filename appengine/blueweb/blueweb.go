@@ -29,8 +29,8 @@ func readStructFromJSONRequest(w http.ResponseWriter, r *http.Request, readInto 
  
 
 
-func generateGet10Response(cards []int, w http.ResponseWriter) {
-  b, _ := json.Marshal(cards)
+func generateGet10Response(cards []blueshared.Card, w http.ResponseWriter) {
+  b, _ := json.Marshal(cards) 
   fmt.Fprint(w, string(b))
 }
 
