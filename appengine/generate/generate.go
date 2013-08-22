@@ -41,14 +41,17 @@ func generateRandomCards(options *blueshared.Get10Options, c chan blueshared.Car
 
   // TODO: do filtering here!
 
-  randomNumbers := make(chan int64)
-  go generateRandomNumbers(len(cards), randomNumbers) 
+  curLen := big.NewInt(int64(len(cards)))
+
   for numGenerated := 0; numGenerated < len(cards); numGenerated += 1 {
-    curCard := <- randomNumbers
+//    curCard := <- randomNumbers
+    curBigCard, _ := rand.Int(rand.Reader, curLen)
+    curCard := curBigCard.Int64()
 
     // TODO: is this the right way to mark cards as used? 
     for cards[curCard].Id == -1 {  
-      curCard = <- randomNumbers
+      curBigCard, _ = rand.Int(rand.Reader, curLen)
+      curCard = curBigCard.Int64()
     }
     c <- cards[curCard]
     cards[curCard].Id = -1
